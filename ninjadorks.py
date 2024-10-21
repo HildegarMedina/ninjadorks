@@ -1,8 +1,9 @@
-from dotenv import load_dotenv, set_key
 import os
-from googlesearch import GoogleSearch
 import argparse
 import sys
+from dotenv import load_dotenv, set_key
+from googlesearch import GoogleSearch
+from results_parser import ResultParser
 
 load_dotenv()
 API_KEY = os.getenv('API_KEY')
@@ -16,7 +17,7 @@ def env_config():
     set_key('.env', 'SEARCH_ENGINE_ID', engine_id)
 
 
-def main(query, configure_env, start_page, pages, lang):
+def main(query, configure_env, start_page, pages, lang, output_json, output_html):
     env_exists = os.path.exists('.env')
 
     if not env_exists or configure_env:
@@ -26,7 +27,15 @@ def main(query, configure_env, start_page, pages, lang):
 
     gsearch = GoogleSearch(API_KEY, SEARCH_ENGINE_ID)
     results = gsearch.search(query, start_page=start_page, pages=pages, lang=lang)
-    print(results)
+    
+    result_parser = ResultParser(results)
+    
+    if output_json:
+        result_parser.exportar_json(output_json)
+    if output_html:
+        result_parser.exportar_html(output_html)
+    if not output_json and not output_html:
+        result_parser.show_screen()
 
 if __name__ == "__main__":
     # Configuración de los argumentos
@@ -44,10 +53,14 @@ if __name__ == "__main__":
                         help="Especifica la cantidad de páginas a buscar.")
     parser.add_argument("--lang", type=str, default="lang_es",
                         help="Especifica el idioma de la búsqueda.\nPor defecto: 'lang_es'.")
+    parser.add_argument("--json", type=str, help="Exporta los resultados a un archivo JSON.")
+    parser.add_argument("--html", type=str, help="Exporta los resultados a un archivo HTML.")
     args = parser.parse_args()
 
     main(query=args.query,
         configure_env=args.config,
         start_page=args.start_page,
         pages=args.pages,
-        lang=args.lang)
+        lang=args.lang,
+        output_json=args.json,
+        output_html=args.html)
