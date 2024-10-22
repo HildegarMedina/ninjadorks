@@ -2,8 +2,9 @@ import os
 import argparse
 import sys
 from dotenv import load_dotenv, set_key
-from googlesearch import GoogleSearch
-from results_parser import ResultParser
+from modules.googlesearch import GoogleSearch
+from modules.results_parser import ResultParser
+from modules.file_downloader import FileDownloader
 
 load_dotenv()
 API_KEY = os.getenv('API_KEY')
@@ -11,18 +12,18 @@ SEARCH_ENGINE_ID = os.getenv('SEARCH_ENGINE_ID')
 
 def env_config():
     """Config env file."""
-    api_key = input('Introduce tu API KEY de Google: ')
-    engine_id = input('Introduce el ID del buscador personalizado de Google: ')
+    api_key = input('Enter your Google API Key: ')
+    engine_id = input('Enter your Google Search Engine ID: ')
     set_key('.env', 'API_KEY', api_key)
     set_key('.env', 'SEARCH_ENGINE_ID', engine_id)
 
 
-def main(query, configure_env, start_page, pages, lang, output_json, output_html):
+def main(query, configure_env, start_page, pages, lang, output_json, output_html, download):
     env_exists = os.path.exists('.env')
 
     if not env_exists or configure_env:
         env_config()
-        print("Archivo .env configurado correctamente.")
+        print("File .env created successfully.")
         sys.exit(1)
 
     gsearch = GoogleSearch(API_KEY, SEARCH_ENGINE_ID)
@@ -31,31 +32,41 @@ def main(query, configure_env, start_page, pages, lang, output_json, output_html
     result_parser = ResultParser(results)
     
     if output_json:
-        result_parser.exportar_json(output_json)
+        result_parser.export_json(output_json)
     if output_html:
-        result_parser.exportar_html(output_html)
+        result_parser.export_html(output_html)
     if not output_json and not output_html:
         result_parser.show_screen()
+    if download:
+        file_downloader = FileDownloader('downloads')
+        file_types = download.split(',')
+        urls = [result['link'] for result in results]
+        file_downloader.filter_download_files(urls, file_types)
 
 if __name__ == "__main__":
     # Configuración de los argumentos
     parser = argparse.ArgumentParser(
         prog="Ninjadorks",
-        description='Esta herramienta permite realizar Hacking con buscadores de manera automática.'
+        description='Ninjadorks it´s a tool to search dorks in Google.',
     )
     parser.add_argument('-q', '--query', type=str,
-                        help='Especifica el dork que desea buscar.\nEjemplo: -q "filetype:sql \"MySQL dump\" (pass|password|passwd|pwd)"')
+                        help='Enter the query to search.')
     parser.add_argument('-c', '--config', action='store_true',
-                        help='Inicia el proceso de configuración del archivo .env\nUtiliza este argumento sin los demás para configurar el archivo .env')
+                        help='Configure the environment variables.')
     parser.add_argument('--start-page', type=int, default=1,
-                        help='Especifica la página de inicio de la búsqueda.')
+                        help='Enter the page number to start the search.\nBy default: 1.')
     parser.add_argument("--pages", type=int, default=1,
-                        help="Especifica la cantidad de páginas a buscar.")
+                        help="Enter the number of pages to search.\nBy default: 1.")
     parser.add_argument("--lang", type=str, default="lang_es",
-                        help="Especifica el idioma de la búsqueda.\nPor defecto: 'lang_es'.")
-    parser.add_argument("--json", type=str, help="Exporta los resultados a un archivo JSON.")
-    parser.add_argument("--html", type=str, help="Exporta los resultados a un archivo HTML.")
+                        help="Enter the language to search.\nBy default: lang_es.")
+    parser.add_argument("--json", type=str, help="Export the results to a JSON file.")
+    parser.add_argument("--html", type=str, help="Export the results to a HTML file.")
+    parser.add_argument("--download", type=str, default="all", help="Enter the type of download separated by commas.\nBy default: all.\nExample: --download 'json,pdf'")
     args = parser.parse_args()
+    
+    if not args.query:
+        parser.print_help()
+        sys.exit(1)
 
     main(query=args.query,
         configure_env=args.config,
@@ -63,4 +74,5 @@ if __name__ == "__main__":
         pages=args.pages,
         lang=args.lang,
         output_json=args.json,
-        output_html=args.html)
+        output_html=args.html,
+        download=args.download)

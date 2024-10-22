@@ -7,7 +7,7 @@ class ResultParser:
     def __init__(self, results):
         self.results = results
 
-    def exportar_html(self, output_file):
+    def export_html(self, output_file):
         with open("template.html", "r", encoding="utf-8") as file:
             template = file.read()
         
@@ -23,13 +23,13 @@ class ResultParser:
 
         with open(output_file, "w", encoding="utf-8") as file:
             file.write(report_html)
-        print(f"Archivo {output_file} exportado correctamente.")
+        print(f"File {output_file} exported successfully.")
 
-    def exportar_json(self, output_file):
+    def export_json(self, output_file):
         with open(output_file, "w", encoding="utf-8") as file:
             data = json.dumps(self.results, ensure_ascii=False, indent=4)
             file.write(data)
-        print(f"Archivo {output_file} exportado correctamente.")
+        print(f"File {output_file} exported successfully.")
 
     def show_screen(self):
         console = Console()

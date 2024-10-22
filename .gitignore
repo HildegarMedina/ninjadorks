@@ -2,6 +2,5 @@
 .env
 __pycache__
 *.pyc
-results.html
-results.json
-
+results/*
+downloads/*
