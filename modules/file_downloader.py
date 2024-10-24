@@ -12,7 +12,7 @@ class FileDownloader:
 
     def download_file(self, url):
         try:
-            response = requests.get(url)
+            response = requests.get(url, timeout=10)
             name_file = url.split('/')[-1]
             complete_path = os.path.join(self.path, name_file)
             with open(complete_path, 'wb') as file:
@@ -27,5 +27,5 @@ class FileDownloader:
                 self.download_file(url)
         else:
             for url in urls:
-                if (url.endswith(f".{type}") for type in types):
+                if url.split('.')[-1] in types:
                     self.download_file(url)
