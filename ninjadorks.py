@@ -1,10 +1,12 @@
 import os
 import argparse
 import sys
-from dotenv import load_dotenv, set_key
+from dotenv import load_dotenv, set_key, get_key
 from modules.googlesearch import GoogleSearch
 from modules.results_parser import ResultParser
 from modules.file_downloader import FileDownloader
+from modules.chatgpt import ChatGPT
+from modules.lm_studio import LmStudio
 
 load_dotenv()
 API_KEY = os.getenv('API_KEY')
@@ -17,8 +19,12 @@ def env_config():
     set_key('.env', 'API_KEY', api_key)
     set_key('.env', 'SEARCH_ENGINE_ID', engine_id)
 
+def openai_config():
+    """Config openai file."""
+    openai_key = input('Enter your OpenAI API Key: ')
+    set_key('.env', 'OPENAI_API_KEY', openai_key)
 
-def main(query, configure_env, start_page, pages, lang, output_json, output_html, download):
+def main(query, configure_env, start_page, pages, lang, output_json, output_html, download, gen_dork):
     env_exists = os.path.exists('.env')
 
     if not env_exists or configure_env:
@@ -26,11 +32,27 @@ def main(query, configure_env, start_page, pages, lang, output_json, output_html
         print("File .env created successfully.")
         sys.exit(1)
 
+    if not get_key('.env', 'OPENAI_API_KEY') and gen_dork:
+        openai_config()
+        print("File .env updated successfully.")
+        sys.exit(1)
+
+    if gen_dork:
+        response = input("Do you want to generate a dork with OpenAI? (y/n): ")
+        if response.lower() in ("y", "yes"):
+            chatgpt = ChatGPT()
+            query = chatgpt.generate_google_dork(gen_dork)
+        else:
+            lmstudio = LmStudio()
+            query = lmstudio.generate_google_dork(gen_dork)
+        print(query)
+        sys.exit(1)
+
     gsearch = GoogleSearch(API_KEY, SEARCH_ENGINE_ID)
     results = gsearch.search(query, start_page=start_page, pages=pages, lang=lang)
-    
+
     result_parser = ResultParser(results)
-    
+
     if output_json:
         result_parser.export_json(output_json)
     if output_html:
@@ -62,9 +84,10 @@ if __name__ == "__main__":
     parser.add_argument("--json", type=str, help="Export the results to a JSON file.")
     parser.add_argument("--html", type=str, help="Export the results to a HTML file.")
     parser.add_argument("--download", type=str, default="all", help="Enter the type of download separated by commas.\nBy default: all.\nExample: --download 'json,pdf'")
+    parser.add_argument("-gd", "--generate-dork", type=str, help="Generate a dork to search.\n Example: --generate-dork 'Generate a dork to search passwords in .env files'")
     args = parser.parse_args()
-    
-    if not args.query:
+        
+    if not args.query and not args.generate_dork:
         parser.print_help()
         sys.exit(1)
 
@@ -75,4 +98,5 @@ if __name__ == "__main__":
         lang=args.lang,
         output_json=args.json,
         output_html=args.html,
-        download=args.download)
+        download=args.download,
+        gen_dork=args.generate_dork)
