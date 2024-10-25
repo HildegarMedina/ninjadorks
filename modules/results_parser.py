@@ -1,6 +1,9 @@
 import json
 from rich.console import Console
 from rich.table import Table
+import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 class ResultParser:
 
@@ -21,12 +24,15 @@ class ResultParser:
                              f'</div>'
         report_html = template.replace("{{ results }}", elements_html)
 
-        with open(output_file, "w", encoding="utf-8") as file:
+
+        results_path = os.path.join(current_dir, "..", "results", output_file)
+        with open(os.path.abspath(results_path), "w", encoding="utf-8") as file:
             file.write(report_html)
         print(f"File {output_file} exported successfully.")
 
     def export_json(self, output_file):
-        with open(output_file, "w", encoding="utf-8") as file:
+        results_path = os.path.join(current_dir, "..", "results", output_file)
+        with open(os.path.abspath(results_path), "w", encoding="utf-8") as file:
             data = json.dumps(self.results, ensure_ascii=False, indent=4)
             file.write(data)
         print(f"File {output_file} exported successfully.")

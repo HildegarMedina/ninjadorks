@@ -23,6 +23,9 @@ class GoogleSearch:
 
             if response.status_code == 200:
                 data = response.json()
+                if not data.get('items'):
+                    print('No results found in page: ', page+1)
+                    break
                 results = self.custom_results(data.get('items'))
                 final_result.extend(results)
             else:
