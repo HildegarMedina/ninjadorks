@@ -1,4 +1,5 @@
 import requests
+import urllib.parse
 
 class GoogleSearch:
 
