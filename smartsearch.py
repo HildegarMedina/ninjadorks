@@ -5,6 +5,7 @@ from transformers import GPT2Tokenizer
 from openai import OpenAI
 from dotenv import load_dotenv
 
+
 class SmartSearch:
     
     def __init__(self, dir_path):
